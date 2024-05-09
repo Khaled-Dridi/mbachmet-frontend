@@ -1,0 +1,13 @@
+.Screenshot-image {
+  height: 300px; /* Adjust the height as needed */
+  object-fit: cover; /* Ensure the image covers the entire space */
+}
+.custom-btn {
+  background-color: #dc54a0 !important;
+  border-color: #dc54a0 !important;
+}
+
+.custom-btn:hover {
+  background-color: #dc54a0 !important;
+  border-color: #dc54a0 !important;
+}

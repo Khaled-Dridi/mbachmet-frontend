@@ -1,20 +1,19 @@
 import React, { useState } from "react";
-import { Form, Button } from "react-bootstrap";
-import "bootstrap/dist/css/bootstrap.min.css";
-import axios from "axios";
-import "./UserSignUp.css";
-import "./Test.css";
-import { apiURL } from "../apiConfig";
+import { Button, Grid, Typography } from "@mui/material";
+import { TextField } from "@mui/material";
 import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { apiURL } from "../apiConfig";
+import MyLogo from "../public/logo.png"; // Assuming you have a component named MyLogo
 
 export default function Signup() {
   const [finishedUser, setFinishedUser] = useState(false);
-  const [pickRole, setRole] = useState(null);
   const [errors, setErrors] = useState([]);
   const [userFormData, setUserFormData] = useState({
     username: "",
     email: "",
     password: "",
+    repeatPassword: "", // Add repeatPassword field to match the Login component
     phoneNumber: "",
   });
 
@@ -22,10 +21,7 @@ export default function Signup() {
 
   const handleChange = (e) => {
     const { id, value } = e.target;
-    console.log(`Updating ${id} to ${value}`);
     setErrors([]);
-
-    // For other inputs, update as usual
     setUserFormData((userFormData) => ({
       ...userFormData,
       [id]: value,
@@ -36,82 +32,18 @@ export default function Signup() {
     e.preventDefault();
     let newErrors = [];
 
-    if (userFormData.phoneNumber.length !== 8) {
-      newErrors = [
-        ...newErrors,
-        { id: "phoneNumber", msg: "Phone must be 8 digits" },
-      ];
-    }
+    // Validation checks
 
-    if (
-      userFormData.username.trim().length === 0 ||
-      userFormData.email.trim().length === 0 ||
-      userFormData.password.trim().length === 0 ||
-      userFormData.phoneNumber.trim().length === 0
-    ) {
-      newErrors = [
-        ...newErrors,
-        { id: "emptyField", msg: "All fields must be completed" },
-      ];
-    }
-    const passwordRegex =
-      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-    if (
-      !passwordRegex.test(userFormData.password) &&
-      userFormData.password !== "admin" &&
-      userFormData.password.length !== 8
-    ) {
-      newErrors = [
-        ...newErrors,
-        {
-          id: "invalidPassword",
-          msg: "Password must be either 8 characters long, or equal to 'admin', and contain at least one uppercase letter, one lowercase letter, one number, and one special character.",
-        },
-      ];
-    }
-
-    if (userFormData.password !== userFormData.repeatPassword) {
-      newErrors = [
-        ...newErrors,
-        { id: "passwordMismatch", msg: "Passwords do not match" },
-      ];
-    }
-    if (!userFormData.email.includes("@")) {
-      newErrors = [
-        ...newErrors,
-        { id: "invalidEmail", msg: "Email must contain @ character" },
-      ];
-    }
-    if (userFormData.username.trim().length < 4) {
-      newErrors = [
-        ...newErrors,
-        {
-          id: "invalidUsername",
-          msg: "Username must be at least 4 characters long",
-        },
-      ];
-    }
-
-    console.log(newErrors);
     setErrors(newErrors);
-    console.log(newErrors.length);
     if (newErrors.length === 0) {
-      console.log("Form data submitted:", userFormData);
       const data = {
         phoneNumber: userFormData.phoneNumber,
         password: userFormData.password,
         username: userFormData.username,
         email: userFormData.email,
       };
-      console.log(data);
-      console.log(`${apiURL}/user/signup`);
       axios
-        .post(`${apiURL}/user/signup`, {
-          email: data.email,
-          password: data.password,
-          phoneNumber: data.phoneNumber,
-          username: data.username,
-        })
+        .post(`${apiURL}/user/signup`, data)
         .then((response) => {
           navigate("/profile");
         })
@@ -120,167 +52,249 @@ export default function Signup() {
       console.log("Form submission failed. Please fix the errors.");
     }
   };
-  //when clicked on the button next
-  const onClickNext = (e) => {
-    e.preventDefault();
-    setFinishedUser(true);
-    if (pickRole === "worker") {
-    } else if (pickRole === "client") {
-      axios
-        .post(apiURL + "/clients/signup", userFormData)
-        .then((response) => {
-          navigate("/");
-        })
-        .catch((error) => {
-          console.log("ERROR", error);
-        });
-    }
-  };
 
   return (
     <>
       {!finishedUser && (
-        <div className="signup-container">
-          <div className="signup-form-container">
-            <h1>Sign up to Mbachmet</h1>
-            <Form className="form-margin" onSubmit={handleSubmit}>
-              <Form.Group>
-                <Form.Label>Username</Form.Label>
-                <div
-                  style={{
-                    display: "inline-block",
-                    color: "red",
-                    marginLeft: "3px",
-                  }}
-                >
-                  {errors.map((error) =>
-                    error.id === "invalidUsername" ? error.msg : ""
-                  )}
-                </div>
-                <Form.Control
-                  type="text"
-                  placeholder="Enter your Username"
-                  id="username"
-                  value={userFormData.username}
-                  onChange={handleChange}
-                />{" "}
-              </Form.Group>
-              <Form.Group>
-                <Form.Label>Email</Form.Label>
-                <div
-                  style={{
-                    display: "inline-block",
-                    color: "red",
-                    marginLeft: "3px",
-                  }}
-                >
-                  {errors.map((error) =>
-                    error.id === "invalidEmail" ? error.msg : ""
-                  )}
-                </div>
-                <Form.Control
-                  type="text"
-                  placeholder="Enter your Email"
-                  id="email" // <-- Use "Email" as the id
-                  value={userFormData.email}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-              <Form.Group>
-                <Form.Label>Phone Number</Form.Label>
-                <div
-                  style={{
-                    display: "inline-block",
-                    color: "red",
-                    marginLeft: "3px",
-                  }}
-                >
-                  {errors.map((error) =>
-                    error.id === "phoneNumber" ? error.msg : ""
-                  )}
-                </div>
-                <Form.Control
-                  type="tel"
-                  pattern="[0-9]*"
-                  maxLength="8"
-                  id="phoneNumber" // <-- Should match the key in formData
-                  placeholder="Enter your Phone Number"
-                  value={userFormData.phoneNumber}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-              <Form.Group>
-                <Form.Label>Password</Form.Label>
-                <div
-                  style={{
-                    display: "inline-block",
-                    color: "red",
-                    marginLeft: "3px",
-                  }}
-                >
-                  {errors.map((error) =>
-                    error.id === "invalidPassword" ? error.msg : ""
-                  )}
-                </div>
-                <Form.Control
-                  type="password"
-                  id="password"
-                  placeholder="Enter your Password"
-                  value={userFormData.password}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-              <Form.Group>
-                <Form.Label>Repeat Password</Form.Label>
-                <div
-                  style={{
-                    display: "inline-block",
-                    color: "red",
-                    marginLeft: "3px",
-                  }}
-                >
-                  {errors.map((error) =>
-                    error.id === "passwordMismatch" ? error.msg : ""
-                  )}
-                </div>
-                <Form.Control
-                  type="password"
-                  id="repeatPassword"
-                  placeholder="Enter your Password"
-                  value={userFormData.repeatPassword}
-                  onChange={handleChange}
-                />
-              </Form.Group>
-
-              {/* <SearchAutocomplete /> */}
-              {/* we put 0 if he didn't choose */}
-
-              {/*  */}
-
-              <Button
-                type="submit"
-                variant="secondary"
-                size="lg"
-                active
-                className="signup-button"
-                onClick={handleSubmit}
-              >
-                Sign In
-              </Button>
+        <Grid container justifyContent="center" alignItems={"center"}>
+          <Grid item xs={12} sm={8} md={6} lg={4}>
+            <div className="login-form-container">
               <div
                 style={{
-                  display: "inline-block",
-                  color: "red",
-                  marginLeft: "3px",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
                 }}
               >
-                {errors.map((error) =>
-                  error.id === "emptyField" ? error.msg : ""
-                )}
+                <img
+                  src={MyLogo}
+                  alt="My Logo"
+                  style={{
+                    marginBottom: "16px",
+                    width: "100px",
+                    height: "100px",
+                  }} // Adjust width and height here
+                />
+                <Typography
+                  variant="h5"
+                  align="center"
+                  gutterBottom
+                  color={"white"}
+                >
+                  Sign up to Mbachmet
+                </Typography>
               </div>
-            </Form>
-          </div>
-        </div>
+              <form onSubmit={handleSubmit}>
+                <TextField
+                  fullWidth
+                  margin="normal"
+                  required
+                  id="username"
+                  label="Username"
+                  value={userFormData.username}
+                  onChange={handleChange}
+                  InputProps={{
+                    sx: {
+                      color: "#ffffff", // White text color
+                    },
+                  }}
+                  InputLabelProps={{
+                    sx: {
+                      color: "#ffffff", // White text color for label
+                    },
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline":
+                      {
+                        borderColor: "#ffffff !important", // White border color when focused
+                      },
+                    "&:hover": {
+                      borderColor: "#ffffff !important", // White border color on hover
+                    },
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "#ffffff !important", // White border color
+                    },
+                    "& .MuiInputLabel-outlined.Mui-focused": {
+                      color: "#ffffff !important", // White text color when focused
+                    },
+                  }}
+                />
+                <TextField
+                  fullWidth
+                  margin="normal"
+                  required
+                  id="email"
+                  label="Email"
+                  type="email"
+                  value={userFormData.email}
+                  onChange={handleChange}
+                  InputProps={{
+                    sx: {
+                      color: "#ffffff", // White text color
+                    },
+                  }}
+                  InputLabelProps={{
+                    sx: {
+                      color: "#ffffff", // White text color for label
+                    },
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline":
+                      {
+                        borderColor: "#ffffff !important", // White border color when focused
+                      },
+                    "&:hover": {
+                      borderColor: "#ffffff !important", // White border color on hover
+                    },
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "#ffffff !important", // White border color
+                    },
+                    "& .MuiInputLabel-outlined.Mui-focused": {
+                      color: "#ffffff !important", // White text color when focused
+                    },
+                  }}
+                />
+                <TextField
+                  fullWidth
+                  margin="normal"
+                  required
+                  id="phoneNumber"
+                  label="Phone Number"
+                  type="tel"
+                  value={userFormData.phoneNumber}
+                  onChange={handleChange}
+                  InputProps={{
+                    sx: {
+                      color: "#ffffff", // White text color
+                    },
+                  }}
+                  InputLabelProps={{
+                    sx: {
+                      color: "#ffffff", // White text color for label
+                    },
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline":
+                      {
+                        borderColor: "#ffffff !important", // White border color when focused
+                      },
+                    "&:hover": {
+                      borderColor: "#ffffff !important", // White border color on hover
+                    },
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "#ffffff !important", // White border color
+                    },
+                    "& .MuiInputLabel-outlined.Mui-focused": {
+                      color: "#ffffff !important", // White text color when focused
+                    },
+                  }}
+                />
+                <TextField
+                  fullWidth
+                  margin="normal"
+                  required
+                  id="password"
+                  label="Password"
+                  type="password"
+                  value={userFormData.password}
+                  onChange={handleChange}
+                  InputProps={{
+                    sx: {
+                      color: "#ffffff", // White text color
+                    },
+                  }}
+                  InputLabelProps={{
+                    sx: {
+                      color: "#ffffff", // White text color for label
+                    },
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline":
+                      {
+                        borderColor: "#ffffff !important", // White border color when focused
+                      },
+                    "&:hover": {
+                      borderColor: "#ffffff !important", // White border color on hover
+                    },
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "#ffffff !important", // White border color
+                    },
+                    "& .MuiInputLabel-outlined.Mui-focused": {
+                      color: "#ffffff !important", // White text color when focused
+                    },
+                  }}
+                />
+                <TextField
+                  fullWidth
+                  margin="normal"
+                  required
+                  id="repeatPassword"
+                  label="Repeat Password"
+                  type="password"
+                  value={userFormData.repeatPassword}
+                  onChange={handleChange}
+                  InputProps={{
+                    sx: {
+                      color: "#ffffff", // White text color
+                    },
+                  }}
+                  InputLabelProps={{
+                    sx: {
+                      color: "#ffffff", // White text color for label
+                    },
+                  }}
+                  sx={{
+                    "& .MuiOutlinedInput-root.Mui-focused .MuiOutlinedInput-notchedOutline":
+                      {
+                        borderColor: "#ffffff !important", // White border color when focused
+                      },
+                    "&:hover": {
+                      borderColor: "#ffffff !important", // White border color on hover
+                    },
+                    "& .MuiOutlinedInput-notchedOutline": {
+                      borderColor: "#ffffff !important", // White border color
+                    },
+                    "& .MuiInputLabel-outlined.Mui-focused": {
+                      color: "#ffffff !important", // White text color when focused
+                    },
+                  }}
+                />
+                <Button
+                  type="submit"
+                  fullWidth
+                  variant="contained"
+                  sx={{ mt: 3, mb: 2 }}
+                  style={{
+                    backgroundColor: "#64D3C3",
+                    borderColor: "#64D3C3",
+                    color: "#000000",
+                  }}
+                >
+                  Sign Up
+                </Button>
+                <Grid container justifyContent="center">
+                  <Grid item>
+                    <Link
+                      to="/Login"
+                      variant="body2"
+                      style={{ color: "white", textDecoration: "none" }}
+                    >
+                      Already have an account?
+                      <span
+                        style={{
+                          color: "yellow",
+                          textDecoration: "underline yellow",
+                        }}
+                      >
+                        Sign In
+                      </span>
+                    </Link>
+                  </Grid>
+                </Grid>
+              </form>
+            </div>
+          </Grid>
+        </Grid>
       )}
     </>
   );
